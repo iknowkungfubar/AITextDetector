@@ -1,0 +1,48 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# AI Agent Artifacts (SECRETS - must never be in public repos)
+AGENTS.md
+CLAUDE.md
+CLAUDE_CODE.md
+.cursorrules
+.cursor/**/
+.windsurfrules
+CONTEXT.md
+MEMORY.md
+ai-instructions.md
+ai-context.md
+.github/copilot-instructions.md
+.hermes/
+SKILL.md
+*.hermes-profile
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.*
