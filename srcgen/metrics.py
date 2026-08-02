@@ -1,9 +1,12 @@
-import time, base64
+import base64
+import time
+
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+
 # pip install opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 ENDPOINT = "https://otlp-gateway-prod-ap-southeast-1.grafana.net/otlp/v1/metrics"
 USER = "REMOVED"
@@ -12,12 +15,14 @@ SERVICE = "aidetect-srcgen"
 
 
 auth = "Basic " + base64.b64encode(f"{USER}:{TOKEN}".encode()).decode()
-resource = Resource(attributes={
-    SERVICE_NAME: SERVICE,
-})
+resource = Resource(
+    attributes={
+        SERVICE_NAME: SERVICE,
+    }
+)
 reader = PeriodicExportingMetricReader(
     OTLPMetricExporter(endpoint=ENDPOINT, headers={"Authorization": auth}),
-    export_interval_millis=5000 
+    export_interval_millis=5000,
 )
 provider = MeterProvider(metric_readers=[reader], resource=resource)
 

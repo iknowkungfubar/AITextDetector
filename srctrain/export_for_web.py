@@ -15,19 +15,18 @@ Browser inference:
 Usage:  python srctrain/export_for_web.py
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from loader import gen_folders
-
-import joblib
-import numpy as np
 import json
 
-MODEL_DIR   = os.path.join(os.path.dirname(__file__), '..', 'model')
-SRCWEB_DIR  = os.path.join(os.path.dirname(__file__), '..', 'srcweb')
-OUTPUT_PATH = os.path.join(SRCWEB_DIR, 'models.json')
+import joblib
+from loader import gen_folders
+
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "model")
+SRCWEB_DIR = os.path.join(os.path.dirname(__file__), "..", "srcweb")
+OUTPUT_PATH = os.path.join(SRCWEB_DIR, "models.json")
 
 
 def export():
@@ -36,8 +35,8 @@ def export():
     for model_name in gen_folders.keys():
         print(f"Exporting {model_name} …", end="  ", flush=True)
 
-        tfidf_path = os.path.join(MODEL_DIR, f'tfidf_{model_name}.joblib')
-        model_path = os.path.join(MODEL_DIR, f'model_{model_name}.joblib')
+        tfidf_path = os.path.join(MODEL_DIR, f"tfidf_{model_name}.joblib")
+        model_path = os.path.join(MODEL_DIR, f"model_{model_name}.joblib")
 
         if not os.path.exists(tfidf_path) or not os.path.exists(model_path):
             print("SKIP (joblib files not found)")
@@ -46,11 +45,11 @@ def export():
         tfidf = joblib.load(tfidf_path)
         model = joblib.load(model_path)
 
-        vocab     = tfidf.vocabulary_
-        idf       = tfidf.idf_
-        coef      = model.coef_[0]
+        vocab = tfidf.vocabulary_
+        idf = tfidf.idf_
+        coef = model.coef_[0]
         intercept = float(model.intercept_[0])
-        combined  = idf * coef
+        combined = idf * coef
 
         rev_vocab = {idx: gram for gram, idx in vocab.items()}
 
@@ -67,17 +66,17 @@ def export():
             ]
 
         all_data[model_name] = {
-            'weights':   weights,
-            'intercept': round(intercept, 6),
+            "weights": weights,
+            "intercept": round(intercept, 6),
         }
         print(f"{len(weights):,} features (of {len(vocab):,} total)")
 
-    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
-        json.dump(all_data, f, ensure_ascii=False, separators=(',', ':'))
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(all_data, f, ensure_ascii=False, separators=(",", ":"))
 
     size_mb = os.path.getsize(OUTPUT_PATH) / 1024 / 1024
     print(f"\nSaved → {OUTPUT_PATH}  ({size_mb:.1f} MB)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     export()

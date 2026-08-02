@@ -1,16 +1,16 @@
+import argparse
 import json
-import time
-from openai import OpenAI
-from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import Lock
 import os
 import random
-import argparse
+import time
 from collections import deque
-# import httpx
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
-from metrics import tokens_counter, chars_counter
+# import httpx
+from metrics import chars_counter, tokens_counter
+from openai import OpenAI
+from tqdm import tqdm
 
 # custom_headers = {
 #     "User-Agent": "Cline/3.57.1",
@@ -36,29 +36,24 @@ random.seed(42)
 BATCH = args.batch
 model = args.model
 
-if args.model == 'custom':
+if args.model == "custom":
     from model import MyOpenAI
+
     client = MyOpenAI()
 else:
-    if '/' not in args.model:
+    if "/" not in args.model:
         # client = OpenAI(
         #     api_key='REMOVED',
         #     base_url='https://ark.cn-beijing.volces.com/api/coding/v3',
         #     http_client=custom_http_client
         # )
-        client = OpenAI(
-            api_key='REMOVED',
-            base_url='http://example.com:8317/v1/'
-        )
+        client = OpenAI(api_key="REMOVED", base_url="http://example.com:8317/v1/")
         # client = OpenAI(
         #     api_key='REMOVED',
         #     base_url='https://opencode.ai/zen/v1/'
         # )
     else:
-        client = OpenAI(
-            api_key='REMOVED',
-            base_url='https://openrouter.ai/api/v1/'
-        )
+        client = OpenAI(api_key="REMOVED", base_url="https://openrouter.ai/api/v1/")
 
 
 def summary_path(c):
@@ -84,19 +79,21 @@ def generate_batch(batch):
         f"以下有 {len(batch)} 个章节概要，用 === 章节 [编号] === 分隔。"
         "请根据每个概要扩写成完整章节正文，保持连贯的叙事、细节和对话，每章节 2000 字左右，算准字数不要过长，算准字数不要过长！！！这些章节间不一定有剧情关联，不要混淆。"
         "严格按以下 JSON 格式输出，JSON 的 content 需要合理换行，不要输出任何其他内容，始终使用简体中文:\n"
-        '[{"id": 0, "content": "..."}, {"id": 1, "content": "..."}, ...]\n\n'
-        + chapters_text
+        '[{"id": 0, "content": "..."}, {"id": 1, "content": "..."}, ...]\n\n' + chapters_text
     )
-    
+
     stream = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": "You are Cline, a helpful assistant."}, {"role": "user", "content": prompt}],
+        messages=[
+            {"role": "system", "content": "You are Cline, a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
         # reasoning_effort="high",
         max_tokens=32768,
         stream=True,
-        stream_options={"include_usage": True}
+        stream_options={"include_usage": True},
     )
-    
+
     # use stream to get real-time stats
     text = ""
     last_cpm_update = 0.0
@@ -131,15 +128,15 @@ def generate_batch(batch):
             chars_counter.add(len(content), {"parallel": args.worker, "model": model})
     with lock:
         update_cpm(stats, time.time(), pending_chars)
-    
+
     text = text.strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
     text = text.strip('`}"\n ')
     try:
         outputs = json.loads(text)
-    except json.JSONDecodeError as e:
-        p = f'fail_gen/{int(time.time())}.txt'
+    except json.JSONDecodeError:
+        p = f"fail_gen/{int(time.time())}.txt"
         print("Failed to parse JSON. Saving to", p)
         with open(p, "w") as f:
             f.write(text)
@@ -184,7 +181,8 @@ with ThreadPoolExecutor(max_workers=args.worker) as executor:
         except Exception as e:
             print(f"Error: {e}")
             # raise e
-            if '429' in str(e):
+            if "429" in str(e):
                 import os
+
                 os._exit(1)
             time.sleep(60)
