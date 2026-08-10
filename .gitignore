@@ -10,6 +10,8 @@ __pycache__/
 .venv/
 venv/
 env/
+# uv lock: project tooling is pip via setup-python; stray local lock is not canonical
+uv.lock
 
 # AI Agent Artifacts (SECRETS - must never be in public repos)
 AGENTS.md
